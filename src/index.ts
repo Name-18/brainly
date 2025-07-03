@@ -24,7 +24,7 @@ mongoose.connect("mongodb+srv://namanprasad269:namanprasad2610@cluster0.qkyb5y5.
 
 app.use (express.json());
 
-app.post("/api/v1/signup",async (req,res)=>{
+app.post("/api/v1/signup",async (req:Request,res:Response)=>{
     const {username , password} = req.body;
 
     if(username === undefined || password ===undefined){
@@ -63,27 +63,43 @@ app.post("/api/v1/signup",async (req,res)=>{
     })
 })
 
-app.post("/api/v1/signin", async (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+app.post("/api/v1/signin",async (req,res)=>{
+const {username,password} =req.body;
 
-    const existingUser = await User.findOne({
-        username,
-        password
-    })
-    if (existingUser) {
-        const token = jwt.sign({
-            id: existingUser._id
-        }, jwt_key)
-
+if(username === undefined || password ===undefined){
         res.json({
-            token
-        })
-    } else {
-        res.status(403).json({
-            message: "Incorrrect credentials"
+            msg:"No feilds can be empty"
         })
     }
+
+
+try{
+    // nice debugged
+      const usr = await User.findOne<IUser>({username})
+
+      if(usr){
+     const pss= await bcrypt.compare(password,usr.password);
+        if(pss){
+            const token = jwt.sign({id:usr.username},jwt_key);
+            return res.json({
+                token:token,
+                message:"token generated"
+            })
+        }
+        else{
+             return res.json({
+                message:"incorrect password"
+            })
+        }
+      }
+    else{
+        res.send("user do not exit sign up first");
+    }
+
+}catch(err){
+res.send("server down :=>"+ err);
+}
+// sign up first;
 })
 
 
@@ -101,8 +117,10 @@ res.status(401).json({
 }
 })
 
-app.delete("/api/v1/content",(req,res)=>{})
+app.delete("/api/v1/content",async (req:Request,res:Response)=>{
 
-app.post("/api/v1/brain/share",(req,res)=>{})
+})
 
-app.get("/api/v1/brain/:shareLink",(req,res)=>{})
+app.post("/api/v1/brain/share",(req:Request,res:Response)=>{})
+
+app.get("/api/v1/brain/:shareLink",(req:Request,res:Response)=>{})

@@ -1,9 +1,11 @@
-import express from "express"
+import express ,{Request,Response} from "express"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 import {userformat} from "./format"
 import {User,Tag,Content,Link} from "./db"
 import bcrypt from "bcrypt"
+import {userMiddleware} from "./middleware"
+
 const jwt_key ="ANDONFa";
 interface IUser {
   username: string;
@@ -84,7 +86,20 @@ app.post("/api/v1/signin", async (req, res) => {
     }
 })
 
-app.get("/api/v1/content",(req,res)=>{})
+
+app.get("/api/v1/content", userMiddleware ,async (req:Request,res:Response)=>{
+ //@ts-ignore
+const userI=req.userId;
+try{
+const cntnt = await Content.find({userId:userI}).populate("userId","tags");
+// we will see to it 
+res.status(401).json({
+    cntnt
+})
+}catch(err){
+    console.log("server crash");
+}
+})
 
 app.delete("/api/v1/content",(req,res)=>{})
 

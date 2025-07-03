@@ -16,8 +16,7 @@ interface IUser {
 
 const app =express();
 
-mongoose.connect("mongodb+srv://namanprasad269:namanprasad2610@cluster0.qkyb5y5.mongodb.net/Brain").then(()=>{
-    console.log("connected to database succesfully");
+mongoose.connect("");
 }).catch((err)=>{
     console.log("Some error occured :"+err);
 })

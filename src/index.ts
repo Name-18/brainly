@@ -1,6 +1,17 @@
 import express from "express"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
+import {userformat} from "./format"
+import {User,Tag,Content,Link} from "./db"
+import bcrypt from "bcrypt"
+const jwt_key ="ANDONFa";
+interface IUser {
+  username: string;
+  password: string; // hashed password
+}
+
+
+
 const app =express();
 
 mongoose.connect("mongodb+srv://namanprasad269:namanprasad2610@cluster0.qkyb5y5.mongodb.net/Brain").then(()=>{
@@ -9,11 +20,69 @@ mongoose.connect("mongodb+srv://namanprasad269:namanprasad2610@cluster0.qkyb5y5.
     console.log("Some error occured :"+err);
 })
 
-app.post("/api/v1/signin",(req,res)=>{
-    const {email,pass}= req.body;
+app.use (express.json());
+
+app.post("/api/v1/signup",async (req,res)=>{
+    const {username , password} = req.body;
+
+    if(username === undefined || password ===undefined){
+        res.json({
+            msg:"No feilds can be empty"
+        })
+    }
+
+    try{
+
+        const extuser = await User.find<IUser>({username});
+        if(extuser){
+         res.send('user exist')
+         return;
+        }
+        
+        const result = userformat.safeParse({username,password});
+        if(!result.success){
+            const errr= result.error.errors;
+            res.json({
+                message:errr
+            })
+        }
+      const hash = await bcrypt.hash(password,10);
+
+       await User.create({
+        username,
+        password:hash
+       })
+         
+    }catch(err){
+         res.send(err);
+    }
+    res.json({
+        msg:"user created succesfully"
+    })
 })
 
-app.post("/api/v1/signup",(req,res)=>{})
+app.post("/api/v1/signin", async (req, res) => {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    const existingUser = await User.findOne({
+        username,
+        password
+    })
+    if (existingUser) {
+        const token = jwt.sign({
+            id: existingUser._id
+        }, jwt_key)
+
+        res.json({
+            token
+        })
+    } else {
+        res.status(403).json({
+            message: "Incorrrect credentials"
+        })
+    }
+})
 
 app.get("/api/v1/content",(req,res)=>{})
 
